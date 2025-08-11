@@ -15,7 +15,6 @@ export const useVehicleRequestsSocket = (currentPage) => {
     const socketRef = useRef(null);
 
     useEffect(() => {
-        // Get the singleton socket instance
         socketRef.current = getSocket();
         const socket = socketRef.current;
 
@@ -24,15 +23,12 @@ export const useVehicleRequestsSocket = (currentPage) => {
             setLoading(true);
             socket.emit('getRequestedVehicles', { page, limit: 5 });
         };
-
-        // Initial fetch when the component mounts or page changes
         fetchDataForPage(currentPage);
 
         // Listener for receiving the list of vehicles
         const handleRequestedVehicles = (data) => {
             if (data.vehicles) {
                 console.log("Vehicle response from backend", data.vehicles);
-                // If totalPages exists, it's a full page load. Otherwise, it's a new record.
                 if (data.totalPages) {
                     setVehicles(data.vehicles);
                     setTotalPages(data.totalPages);
@@ -53,15 +49,13 @@ export const useVehicleRequestsSocket = (currentPage) => {
         socket.on('requestedVehicles', handleRequestedVehicles);
         socket.on('decisionVehicle', handleDecision);
 
-        // Cleanup function to remove listeners
         return () => {
             socket.off('requestedVehicles', handleRequestedVehicles);
             socket.off('decisionVehicle', handleDecision);
         };
 
-    }, [currentPage]); // Re-run the effect if the currentPage changes
+    }, [currentPage]);
 
-    // Expose a function for optimistic UI updates
     const removeVehicleOptimistically = (vehicleId) => {
         setVehicles(prevVehicles => prevVehicles.filter(vehicle => vehicle.id !== vehicleId));
     };

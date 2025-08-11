@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { adminAPI } from '../api/adminAPI';
-import { useUserRequestsSocket } from '../hooks/useUserRequestsSocket'; // Import the custom hook
+import { useUserRequestsSocket } from '../hooks/useUserRequestsSocket';
 import Modal from '../components/Modal';
+import UserDetailModal from '../components/UserDetailModal'; // Import the new detail modal
 import Pagination from '../components/Pagination';
 
 const UserRequests = () => {
@@ -11,77 +12,106 @@ const UserRequests = () => {
     const { users, loading, error, totalPages, removeUserOptimistically } = useUserRequestsSocket(page);
 
     // State for the rejection modal remains in the component
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [detailedUser, setDetailedUser] = useState(null);
+    const [detailLoading, setDetailLoading] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
     const [rejectionReason, setRejectionReason] = useState('');
-    const [actionError, setActionError] = useState(''); // For errors on approve/reject actions
+    const [actionError, setActionError] = useState(''); 
 
-    const openRejectionModal = (user) => {
-        setSelectedUser(user);
-        setRejectionReason('');
-        setIsModalOpen(true);
+    // Function to handle clicking a row to open the detail view
+    const handleRowClick = async (userId) => {
+        setDetailLoading(true);
+        setActionError('');
+        setIsDetailModalOpen(true);
+        try {
+            const response = await adminAPI.getDetailsLevel2User(userId);
+            setDetailedUser(response.data.data);
+        } catch (err) {
+            setActionError('Failed to load user details. Please close and try again.');
+            console.error(err);
+        } finally {
+            setDetailLoading(false);
+        }
+    };
+
+    const handleCloseModal = () => {
+        setIsDetailModalOpen(false);
+        setDetailedUser(null);
     };
 
     const handleApprove = async (userId) => {
-        if (!window.confirm("Are you sure you want to approve this user?")) return;
         try {
             setActionError('');
             await adminAPI.decisionUserLevel2({ userId, status: true });
             // Optimistically remove the user from the UI
             removeUserOptimistically(userId);
+            handleCloseModal();
         } catch (err) {
             setActionError('Failed to approve user. Please try again.');
         }
     };
 
-    const handleReject = async () => {
-        if (!rejectionReason) {
-            alert("Rejection reason is required.");
+    const handleReject = async (userId, reason) => {
+        if (!reason) {
+            setActionError('Rejection reason is required.');
             return;
         }
         try {
             setActionError('');
-            await adminAPI.decisionUserLevel2({ userId: selectedUser.id, status: false, rejectedReason: rejectionReason });
-            setIsModalOpen(false);
-            // Optimistically remove the user from the UI
-            removeUserOptimistically(selectedUser.id);
+            await adminAPI.decisionUserLevel2({ userId, status: false, rejectedReason: reason });
+            removeUserOptimistically(userId);
+            handleCloseModal();
         } catch (err) {
             setActionError('Failed to reject user. Please try again.');
         }
     };
 
+    const renderActionButtons = (user) => (
+        <div className="flex space-x-2">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    handleRowClick(user.id);
+                }}
+                className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+            >
+                View Details
+            </button>
+        </div>
+    );
+
     return (
         <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Pending User Requests</h1>
-            {error && <p className="text-red-500 bg-red-100 p-3 rounded-md mb-4">{error}</p>}
-            {actionError && <p className="text-red-500 bg-red-100 p-3 rounded-md mb-4">{actionError}</p>}
-            
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold">User Level 2 Requests</h1>
+            </div>
+
             <div className="bg-white shadow-md rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left text-gray-500">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
                             <tr>
-                                <th scope="col" className="px-6 py-3">User</th>
-                                <th scope="col" className="px-6 py-3">Email</th>
-                                <th scope="col" className="px-6 py-3">Requested At</th>
-                                <th scope="col" className="px-6 py-3 text-right">Actions</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nickname</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="bg-white divide-y divide-gray-200">
                             {loading ? (
-                                <tr><td colSpan="4" className="text-center p-6">Loading...</td></tr>
+                                <tr><td colSpan="4" className="text-center p-6 text-gray-500">Loading...</td></tr>
+                            ) : error ? (
+                                <tr><td colSpan="4" className="text-center p-6 text-red-500">Error: {error}</td></tr>
                             ) : users.length > 0 ? (
-                                users.map(user => (
-                                    <tr key={user.id} className="bg-white border-b hover:bg-gray-50">
-                                        <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap flex items-center space-x-3">
-                                            <img className="w-10 h-10 rounded-full" src={user.avatar} onError={(e) => e.target.src='https://placehold.co/40x40/EFEFEF/AAAAAA?text=U'} alt={`${user.nickname} avatar`} />
-                                            <span>{user.nickname}</span>
-                                        </th>
-                                        <td className="px-6 py-4">{user.email}</td>
-                                        <td className="px-6 py-4">{new Date(user.createdAt).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4 text-right space-x-2">
-                                            <button onClick={() => handleApprove(user.id)} className="font-medium text-green-600 hover:underline">Approve</button>
-                                            <button onClick={() => openRejectionModal(user)} className="font-medium text-red-600 hover:underline">Reject</button>
+                                users.map((user) => (
+                                    <tr key={user.id} className="hover:bg-gray-100 cursor-pointer" onClick={() => handleRowClick(user.id)}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{user.id}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.nickname}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            {renderActionButtons(user)}
                                         </td>
                                     </tr>
                                 ))
@@ -94,22 +124,25 @@ const UserRequests = () => {
             </div>
             <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Reject request for ${selectedUser?.nickname}`}>
-                <div className="space-y-4">
-                    <p>Please provide a reason for rejecting this user's level 2 upgrade request.</p>
-                    <textarea
-                        value={rejectionReason}
-                        onChange={(e) => setRejectionReason(e.target.value)}
-                        className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        rows="4"
-                        placeholder="e.g., Provided documents are blurry..."
-                    ></textarea>
-                    <div className="flex justify-end space-x-2">
-                        <button onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
-                        <button onClick={handleReject} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Confirm Rejection</button>
-                    </div>
+            <UserDetailModal
+                isOpen={isDetailModalOpen}
+                onClose={handleCloseModal}
+                user={detailedUser}
+                onApprove={handleApprove}
+                onReject={handleReject}
+            />
+
+            {detailLoading && isDetailModalOpen && (
+                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="text-white text-lg">Loading Details...</div>
                 </div>
-            </Modal>
+            )}
+            {actionError && (
+                 <div className="fixed bottom-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50">
+                    <p>{actionError}</p>
+                    <button onClick={() => setActionError('')} className="absolute top-1 right-2 text-white font-bold">&times;</button>
+                </div>
+            )}
         </div>
     );
 };

@@ -12,7 +12,6 @@ import {
   X
 } from 'lucide-react';
 
-// Re-export them for the rest of your application to use
 export { 
   Home, 
   Users, 

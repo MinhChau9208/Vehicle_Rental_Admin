@@ -13,7 +13,7 @@ const Login = () => {
       const { accessToken, refreshToken } = response.data;
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refreshToken);
-      window.location.href = '/admin'; // Redirect to admin panel
+      window.location.href = '/admin';
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     }

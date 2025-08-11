@@ -1,7 +1,6 @@
 import Sidebar from '../components/Sidebar';
 import UserRequests from '../views/UserRequests';
 import VehicleRequests from '../views/VehicleRequests';
-import ClaimsComplaints from '../components/ClaimsComplaints';
 
 const AdminPanel = ({ token }) => (
   <div className="flex">
@@ -17,7 +16,6 @@ const AdminPanel = ({ token }) => (
       <div className="grid grid-cols-1 gap-4">
         <UserRequests token={token} />
         <VehicleRequests token={token} />
-        <ClaimsComplaints />
       </div>
     </div>
   </div>

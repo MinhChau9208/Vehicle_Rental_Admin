@@ -1,9 +1,6 @@
 import axios from 'axios';
-import { mockUserStats, mockVehicleStats, mockUserRequests, mockVehicleRequests } from './mockData';
 
 const BASE_URL = 'https://vehicle.kietpep1303.com/api';
-
-const USE_MOCK_API = false;
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -56,46 +53,22 @@ apiClient.interceptors.response.use(
 
 // Admin API functions
 export const adminAPI = {
-  // Login function for admin authentication
+
   login: (email, password) => apiClient.post('/auth/login', { email, password }),
 
-  getUsersStatistics: async () => {
-    // COMMENT: When USE_MOCK_API is true, we return dummy data after a short delay.
-    if (USE_MOCK_API) {
-      await new Promise(res => setTimeout(res, 500));
-      return { data: { data: mockUserStats } };
-    }
-    // COMMENT: When USE_MOCK_API is false, this makes a real API call.
+  getUsersStatistics: () => {
     return apiClient.get('/admin/users-statistics');
   },
 
-  getVehiclesStatistics: async () => {
-    if (USE_MOCK_API) {
-      await new Promise(res => setTimeout(res, 500));
-      return { data: { data: mockVehicleStats } };
-    }
+  getVehiclesStatistics: () => {
     return apiClient.get('/admin/vehicles-statistics');
   },
 
   getRequestedUserLevel2: async ({ page = 1, limit = 5 }) => {
-    if (USE_MOCK_API) {
-      await new Promise(res => setTimeout(res, 500));
-      const start = (page - 1) * limit;
-      const end = start + limit;
-      const paginatedUsers = mockUserRequests.slice(start, end);
-      return { data: { data: { users: paginatedUsers, totalPages: Math.ceil(mockUserRequests.length / limit), currentPage: page } } };
-    }
     return apiClient.get('/admin/get-requested-user-level2', { params: { page, limit } });
   },
 
   getRequestedVehicles: async ({ page = 1, limit = 5 }) => {
-    if (USE_MOCK_API) {
-      await new Promise(res => setTimeout(res, 500));
-       const start = (page - 1) * limit;
-      const end = start + limit;
-      const paginatedVehicles = mockVehicleRequests.slice(start, end);
-      return { data: { data: { vehicles: paginatedVehicles, totalPages: Math.ceil(mockVehicleRequests.length / limit), currentPage: page } } };
-    }
     return apiClient.get('/admin/get-requested-vehicles', { params: { page, limit } });
   },
 
@@ -103,24 +76,37 @@ export const adminAPI = {
     return apiClient.get('/admin/get-details-vehicle', { params: { vehicleId } });
   },
 
-  decisionUserLevel2: async (data) => {
-    if (USE_MOCK_API) {
-      console.log("Mocking user decision:", data);
-      await new Promise(res => setTimeout(res, 500));
-      // In mock mode, we don't actually change the data source, just simulate success.
-      return { data: { status: 200, message: "Mock decision made successfully." } };
-    }
+  getDetailsLevel2User: (userId) => {
+    return apiClient.get('/admin/get-details-level2-user', { params: { userId } });
+  },
+
+  decisionUserLevel2: (data) => {
     return apiClient.post('/admin/decision-requested-user-level2', data);
   },
 
-  decisionVehicle: async (data) => {
-    if (USE_MOCK_API) {
-      console.log("Mocking vehicle decision:", data);
-      await new Promise(res => setTimeout(res, 500));
-      return { data: { status: 200, message: "Mock decision made successfully." } };
-    }
+  decisionVehicle: (data) => {
     return apiClient.post('/admin/decision-requested-vehicle', data);
   },
+
+  getUsers: (params = {}) => {
+    return apiClient.get('/admin/get-users', { params });
+  },
+
+  getVehicles: (params = {}) => {
+    return apiClient.get('/admin/get-vehicles', { params });
+  },
+
+  suspendUser: (userId) => 
+    apiClient.post('/admin/suspend-user', { userId }),
+
+  unsuspendUser: (userId, status = 'APPROVED') => 
+    apiClient.post('/admin/unsuspend-user', { userId, status }),
+
+  suspendVehicle: (vehicleId) => 
+    apiClient.post('/admin/suspend-vehicle', { vehicleId }),
+
+  unsuspendVehicle: (vehicleId) =>
+    apiClient.post('/admin/unsuspend-vehicle', { vehicleId }),
 };
 
 export default adminAPI;

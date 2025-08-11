@@ -1,10 +1,9 @@
 import React from 'react';
 
 /**
- * A placeholder component for features that are not yet implemented.
- * @param {object} props - The component props.
- * @param {string} props.title - The title to display for the placeholder page.
- * @returns {JSX.Element} The rendered placeholder view.
+ * @param {object} props
+ * @param {string} props.title
+ * @returns {JSX.Element}
  */
 const PlaceholderView = ({ title }) => (
     <div>

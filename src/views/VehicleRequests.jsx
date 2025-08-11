@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { adminAPI } from '../api/adminAPI';
 import { useVehicleRequestsSocket } from '../hooks/useVehicleRequestsSocket';
-import VehicleDetailModal from '../components/VehicleDetailModal'; // Import the new detail modal
+import VehicleDetailModal from '../components/VehicleDetailModal';
 import Pagination from '../components/Pagination';
 
 const VehicleRequests = () => {
     const [page, setPage] = useState(1);
     const { vehicles, loading, error, totalPages, removeVehicleOptimistically } = useVehicleRequestsSocket(page);
 
-    // State for the detailed view modal
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [detailedVehicle, setDetailedVehicle] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -35,14 +34,13 @@ const VehicleRequests = () => {
         setDetailedVehicle(null);
     };
 
-    // Decision logic is now passed to the modal
     const handleApprove = async (vehicleId) => {
         if (!window.confirm("Are you sure you want to approve this vehicle?")) return;
         try {
             setActionError('');
             await adminAPI.decisionVehicle({ vehicleId, status: true });
-            removeVehicleOptimistically(vehicleId); // Optimistically update UI
-            handleCloseModal(); // Close the modal on success
+            removeVehicleOptimistically(vehicleId);
+            handleCloseModal();
         } catch (err) {
             setActionError('Failed to approve vehicle. Please try again.');
         }
@@ -52,8 +50,8 @@ const VehicleRequests = () => {
         try {
             setActionError('');
             await adminAPI.decisionVehicle({ vehicleId, status: false, rejectedReason });
-            removeVehicleOptimistically(vehicleId); // Optimistically update UI
-            handleCloseModal(); // Close the modal on success
+            removeVehicleOptimistically(vehicleId);
+            handleCloseModal();
         } catch (err) {
             setActionError('Failed to reject vehicle. Please try again.');
         }
@@ -117,7 +115,7 @@ const VehicleRequests = () => {
                 onApprove={handleApprove}
                 onReject={handleReject}
             />
-            {/* You could also add a loading indicator for the modal content here */}
+
             {detailLoading && isDetailModalOpen && (
                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="text-white text-lg">Loading Details...</div>

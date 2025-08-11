@@ -2,7 +2,6 @@ import React from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '../assets/icon';
 
 /**
- * A reusable pagination component.
  * @param {object} props - The component props.
  * @param {number} props.currentPage - The current active page.
  * @param {number} props.totalPages - The total number of pages.
@@ -10,7 +9,6 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from '../asset
  * @returns {JSX.Element|null} The rendered pagination component or null if there's only one page.
  */
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
-    // Don't render the component if there's only one page or less.
     if (totalPages <= 1) {
         return null;
     }

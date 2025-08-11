@@ -110,7 +110,7 @@ const VehicleDetailModal = ({ isOpen, onClose, vehicle, onApprove, onReject }) =
                     </div>
                 </div>
 
-                {/* DECISION AREA (FOOTER) */}
+                {/* Decision */}
                 <div className="flex-shrink-0 p-4 bg-gray-100 border-t">
                     <h3 className="text-lg font-bold mb-4">Make a Decision</h3>
                     <div className="space-y-4">

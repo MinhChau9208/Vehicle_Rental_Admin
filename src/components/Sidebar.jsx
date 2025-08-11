@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home, UserCheck, CarTaxiFront, Users, Car, LogOut } from '../assets/icon';
 
-const Sidebar = ({ activeView, setActiveView }) => {
+const Sidebar = ({ activeView, setActiveView, handleLogout }) => {
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: Home },
         { id: 'user-requests', label: 'User Requests', icon: UserCheck },
@@ -47,7 +47,10 @@ const Sidebar = ({ activeView, setActiveView }) => {
                         <p className="text-xs text-gray-400">Administrator</p>
                     </div>
                 </div>
-                 <button className="w-full mt-4 flex items-center justify-center px-3 py-2 rounded-md text-sm font-medium transition-colors text-gray-300 hover:bg-gray-700 hover:text-white">
+                <button 
+                    onClick={handleLogout} 
+                    className="w-full mt-4 flex items-center justify-center px-3 py-2 rounded-md text-sm font-medium transition-colors text-gray-300 hover:bg-gray-700 hover:text-white"
+                >
                     <React.Suspense fallback={<div className="w-5 h-5 mr-3" />}>
                         <LogOut className="mr-3" size={20} />
                     </React.Suspense>
